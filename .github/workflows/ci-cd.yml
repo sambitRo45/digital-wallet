@@ -61,6 +61,7 @@ jobs:
           name: digital-wallet-jar
           path: target/*.jar
 
+
   docker-build-and-push:
     name: Docker Build and Push
     needs: build-and-test
@@ -70,6 +71,12 @@ jobs:
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
+
+      - name: Download JAR artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: digital-wallet-jar
+          path: target/
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
