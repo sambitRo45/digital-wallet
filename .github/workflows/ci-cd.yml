@@ -16,6 +16,12 @@ jobs:
     name: Build and Test
     runs-on: ubuntu-latest
 
+    env:
+      MAIL_HOST: localhost
+      MAIL_PORT: 1025
+      MAIL_USERNAME: test
+      MAIL_PASSWORD: test
+
     steps:
 
       - name: Checkout source code
@@ -67,3 +73,4 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/digital-wallet:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/digital-wallet:${{ github.sha }}
+
