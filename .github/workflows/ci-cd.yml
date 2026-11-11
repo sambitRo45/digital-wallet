@@ -17,7 +17,7 @@ jobs:
     env:
       DB_URL: jdbc:mysql://127.0.0.1:3306/digital_wallet
       DB_USERNAME: root
-      DB_PASSWORD: IamRo@45
+      DB_PASSWORD: root
 
       JWT_SECRET: mysecretkeymysecretkeymysecretkeymysecretkeymysecretkey
       JWT_EXPIRATION_MS: 900000
