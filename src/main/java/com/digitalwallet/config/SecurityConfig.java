@@ -138,7 +138,7 @@ public class SecurityConfig {
 
         String origins = environment.getProperty(
                 "app.cors.allowed-origins",
-                "http://localhost:3000,http://localhost:5173,https://digital-wallet-new.netlify.app"
+                "http://localhost:3000,http://localhost:5173,https://digital-wallet-new.netlify.app, https://digital-wallet-frontend-zeta.vercel.app"
         );
 
         CorsConfiguration configuration = new CorsConfiguration();
