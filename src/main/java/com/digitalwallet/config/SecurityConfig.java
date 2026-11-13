@@ -1,3 +1,4 @@
+
 package com.digitalwallet.config;
 
 import com.digitalwallet.security.CustomUserDetailsService;
@@ -31,7 +32,11 @@ public class SecurityConfig {
     private final CustomUserDetailsService customUserDetailsService;
     private final PasswordEncoder passwordEncoder;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter, CustomUserDetailsService customUserDetailsService, PasswordEncoder passwordEncoder) {
+    public SecurityConfig(
+            JwtAuthenticationFilter jwtAuthenticationFilter,
+            CustomUserDetailsService customUserDetailsService,
+            PasswordEncoder passwordEncoder
+    ) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.customUserDetailsService = customUserDetailsService;
         this.passwordEncoder = passwordEncoder;
@@ -40,49 +45,84 @@ public class SecurityConfig {
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
 
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(customUserDetailsService);
+        DaoAuthenticationProvider provider =
+                new DaoAuthenticationProvider(customUserDetailsService);
+
         provider.setPasswordEncoder(passwordEncoder);
+
         return provider;
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
+    public AuthenticationManager authenticationManager(
+            AuthenticationConfiguration configuration
+    ) throws Exception {
+
         return configuration.getAuthenticationManager();
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            CorsConfigurationSource corsConfigurationSource
+    ) throws Exception {
 
         http
                 .csrf(csrf -> csrf.disable())
-                .cors(cors -> {})
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+                // Enable CORS using the configured CorsConfigurationSource
+                .cors(cors ->
+                        cors.configurationSource(corsConfigurationSource)
+                )
+
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(
+                                SessionCreationPolicy.STATELESS
+                        )
+                )
+
                 .authenticationProvider(authenticationProvider())
+
                 .authorizeHttpRequests(auth -> auth
+
+                        // Allow browser preflight requests
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                        // Public endpoints
                         .requestMatchers(
                                 "/api/auth/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html"
                         ).permitAll()
+
+                        // Admin endpoints
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
+                        // All remaining endpoints require authentication
                         .anyRequest().authenticated()
                 )
+
                 .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint((request, response, exception) -> {
-                            response.sendError(
-                                    HttpServletResponse.SC_UNAUTHORIZED,
-                                    "Authentication required"
-                            );
-                        })
-                        .accessDeniedHandler((request, response, exception) -> {
-                            response.sendError(
-                                    HttpServletResponse.SC_FORBIDDEN,
-                                    "Access denied"
-                            );
-                        })
+
+                        .authenticationEntryPoint(
+                                (request, response, exception) ->
+                                        response.sendError(
+                                                HttpServletResponse.SC_UNAUTHORIZED,
+                                                "Authentication required"
+                                        )
+                        )
+
+                        .accessDeniedHandler(
+                                (request, response, exception) ->
+                                        response.sendError(
+                                                HttpServletResponse.SC_FORBIDDEN,
+                                                "Access denied"
+                                        )
+                        )
                 )
+
+                // Add JWT filter before UsernamePasswordAuthenticationFilter
                 .addFilterBefore(
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class
@@ -92,14 +132,18 @@ public class SecurityConfig {
     }
 
     @Bean
-    public CorsConfigurationSource corsConfigurationSource(Environment environment) {
+    public CorsConfigurationSource corsConfigurationSource(
+            Environment environment
+    ) {
 
         String origins = environment.getProperty(
                 "app.cors.allowed-origins",
-                "http://localhost:3000, http://localhost:5173, https://digital-wallet-new.netlify.app"
+                "http://localhost:3000,http://localhost:5173,https://digital-wallet-new.netlify.app"
         );
 
         CorsConfiguration configuration = new CorsConfiguration();
+
+        // Allowed frontend origins
         configuration.setAllowedOrigins(
                 Arrays.stream(origins.split(","))
                         .map(String::trim)
@@ -107,17 +151,20 @@ public class SecurityConfig {
                         .toList()
         );
 
+        // Allowed HTTP methods
         configuration.setAllowedMethods(
                 List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
         );
 
-        configuration.setAllowedHeaders(
-                List.of("Authorization", "Content-Type", "Idempotency-Key")
-        );
+        // Allow request headers
+        configuration.setAllowedHeaders(List.of("*"));
 
+        // JWT is sent through Authorization header, not cookies
         configuration.setAllowCredentials(false);
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
+
         source.registerCorsConfiguration("/**", configuration);
 
         return source;
