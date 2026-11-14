@@ -4,6 +4,7 @@ import com.digitalwallet.enums.AccountStatus;
 import com.digitalwallet.enums.Role;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -22,6 +23,7 @@ import java.time.LocalDateTime;
                 )
         }
 )
+@Builder
 public class User {
 
     @Id
